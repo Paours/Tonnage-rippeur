@@ -175,8 +175,8 @@
     const SUPABASE_URL = " https://xcncxagmsopmlryiklcm.supabase.co/rest/v1/"; 
     const SUPABASE_KEY = " sb_publishable_XY13fL2TWqDJWFaY6AhuAg_28V69Ov1";
     
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
+    ```javascript
+   const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     document.getElementById('date').valueAsDate = new Date();
     
     if(localStorage.getItem('nomChauffeur')) {

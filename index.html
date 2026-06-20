@@ -7,6 +7,8 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="https://images.rawpixel.com/image_png_800/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIzLTA4L3Jhd3BpeGVsX29mZmljZV8yOF92ZWN0b3JfaWxsdXN0cmF0aW9uX29mX2FfZ2FyYmFnZV90cnVja19pc29sYXRlZF9hYjg2MWZhMy05YzM1LTQ1OGEtOTBhNS0wZTU1Mjg5MDNmNDIucG5n.png">
     <meta name="theme-color" content="#2e7d32">
+    <!-- Chargement de Supabase pour connecter la base de données -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { 
             --primary: #2e7d32; 
@@ -43,7 +45,7 @@
             margin-bottom: 5px; 
             font-weight: bold; 
         }
-        input, textarea { 
+        input, textarea, select { 
             width: 100%; 
             padding: 10px; 
             border: 1px solid #ccc; 
@@ -82,7 +84,7 @@
         .history-list { 
             list-style: none; 
             padding: 0; 
-            max-height: 250px; 
+            max-height: 350px; 
             overflow-y: auto; 
         }
         .history-item { 
@@ -96,8 +98,19 @@
             border: 1px solid #eee; 
         }
         .history-details { 
-            font-size: 14px; 
+            font-size: 13px; 
             color: #666; 
+            margin-top: 3px; 
+        }
+        .badge-chauffeur {
+            background: #e0e0e0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #444;
+            display: inline-block;
+            margin-bottom: 3px;
         }
         .delete-btn { 
             background: #c62828; 
@@ -108,13 +121,24 @@
             cursor: pointer; 
             font-size: 12px; 
         }
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 10px;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Suivi Tonnage 🚛</h1>
+    <h1>Suivi Tonnage Général 🚛</h1>
     
+    <div class="form-group">
+        <label for="chauffeur">Nom du Chauffeur</label>
+        <input type="text" id="chauffeur" placeholder="Ex: Jean / Thomas" required>
+    </div>
+
     <div class="form-group">
         <label for="date">Date</label>
         <input type="date" id="date">
@@ -130,14 +154,16 @@
         <textarea id="note" rows="2" placeholder="Ex: Tournée Nord, Camion 4B"></textarea>
     </div>
     
-    <button onclick="ajouterTonnage()">Enregistrer la journée</button>
+    <button onclick="ajouterTonnage()">Enregistrer pour l'équipe</button>
     
     <div class="total-box">
-        Total Cumulé : <span id="total-tonnage">0</span> t
+        Total Cumulé Global : <span id="total-tonnage">0</span> t
     </div>
     
-    <h2>Historique</h2>
-    <ul id="history" class="history-list"></ul>
+    <h2>Historique Équipe (En direct)</h2>
+    <ul id="history" class="history-list">
+        <li class="loading">Connexion à la base de données...</li>
+    </ul>
 </div>
 
 <script>
@@ -145,63 +171,54 @@
         navigator.serviceWorker.register('sw.js');
     }
 
+    // CONFIGURATION SUPABASE (A REMPLIR AVEC VOS INFOS)
+    const SUPABASE_URL = " https://xcncxagmsopmlryiklcm.supabase.co/rest/v1/"; 
+    const SUPABASE_KEY = " sb_publishable_XY13fL2TWqDJWFaY6AhuAg_28V69Ov1";
+    
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
     document.getElementById('date').valueAsDate = new Date();
-    let sauvegardes = JSON.parse(localStorage.getItem('tonnagesRippeurs')) || [];
-    afficherDonnees();
-
-    function ajouterTonnage() {
-        const dateInput = document.getElementById('date').value;
-        const tonnageInput = parseFloat(document.getElementById('tonnage').value);
-        const noteInput = document.getElementById('note').value;
-
-        if (!dateInput || isNaN(tonnageInput)) { 
-            alert("Veuillez remplir la date et le tonnage !"); 
-            return; 
-        }
-
-        const dateObj = new Date(dateInput);
-        const dateFormatee = dateObj.toLocaleDateString('fr-FR');
-
-        const nouvelleEntree = { 
-            id: Date.now(), 
-            date: dateFormatee, 
-            rawDate: dateInput, 
-            tonnage: tonnageInput, 
-            note: noteInput 
-        };
-
-        sauvegardes.push(nouvelleEntree);
-        sauvegardes.sort((a, b) => new Date(b.rawDate) - new Date(a.rawDate));
-        
-        localStorage.setItem('tonnagesRippeurs', JSON.stringify(sauvegardes));
-        
-        document.getElementById('tonnage').value = '';
-        document.getElementById('note').value = '';
-        
-        afficherDonnees();
+    
+    if(localStorage.getItem('nomChauffeur')) {
+        document.getElementById('chauffeur').value = localStorage.getItem('nomChauffeur');
     }
 
-    function supprimerEntree(id) {
-        if(confirm("Supprimer cette ligne ?")) {
-            sauvegardes = sauvegardes.filter(item => item.id !== id);
-            localStorage.setItem('tonnagesRippeurs', JSON.stringify(sauvegardes));
-            afficherDonnees();
-        }
-    }
+    chargerDonneesEnDirect();
 
-    function afficherDonnees() {
+    async function chargerDonneesEnDirect() {
         const liste = document.getElementById('history');
         const totalSpan = document.getElementById('total-tonnage');
+        
+        let { data: tonnages, error } = await supabase
+            .from('tonnages')
+            .select('*')
+            .order('id', { ascending: false });
+
+        if (error) {
+            liste.innerHTML = `<li class="loading" style="color:red;">Erreur de chargement...</li>`;
+            console.error(error);
+            return;
+        }
+
         liste.innerHTML = '';
         let total = 0;
 
-        sauvegardes.forEach(item => {
-            total += item.tonnage;
+        if(tonnages.length === 0) {
+            liste.innerHTML = '<li class="loading">Aucun tonnage enregistré pour le moment.</li>';
+        }
+
+        tonnages.forEach(item => {
+            total += parseFloat(item.tonnage);
+            
+            const dateObj = new Date(item.date);
+            const dateFormatee = dateObj.toLocaleDateString('fr-FR');
+
             const li = document.createElement('li');
             li.className = 'history-item';
             li.innerHTML = `
                 <div>
-                    <strong>${item.date} : ${item.tonnage} t</strong>
+                    <span class="badge-chauffeur">👤 ${item.chauffeur || 'Inconnu'}</span>
+                    <div><strong>${dateFormatee} : ${item.tonnage} t</strong></div>
                     <div class="history-details">${item.note ? item.note : ''}</div>
                 </div>
                 <button class="delete-btn" onclick="supprimerEntree(${item.id})">X</button>
@@ -209,6 +226,52 @@
             liste.appendChild(li);
         });
         totalSpan.textContent = total.toFixed(2);
+    }
+
+    async function ajouterTonnage() {
+        const chauffeurInput = document.getElementById('chauffeur').value.trim();
+        const dateInput = document.getElementById('date').value;
+        const tonnageInput = parseFloat(document.getElementById('tonnage').value);
+        const noteInput = document.getElementById('note').value;
+
+        if (!chauffeurInput || !dateInput || isNaN(tonnageInput)) { 
+            alert("Veuillez remplir le nom, la date et le tonnage !"); 
+            return; 
+        }
+
+        localStorage.setItem('nomChauffeur', chauffeurInput);
+
+        const { error } = await supabase
+            .from('tonnages')
+            .insert([
+                { chauffeur: chauffeurInput, date: dateInput, tonnage: tonnageInput, note: noteInput }
+            ]);
+
+        if (error) {
+            alert("Erreur lors de l'enregistrement. Vérifiez votre connexion internet.");
+            console.error(error);
+            return;
+        }
+        
+        document.getElementById('tonnage').value = '';
+        document.getElementById('note').value = '';
+        
+        chargerDonneesEnDirect();
+    }
+
+    async function supprimerEntree(id) {
+        if(confirm("Supprimer définitivement cette ligne pour TOUTE l'équipe ?")) {
+            const { error } = await supabase
+                .from('tonnages')
+                .delete()
+                .eq('id', id);
+
+            if (error) {
+                alert("Impossible de supprimer.");
+                return;
+            }
+            chargerDonneesEnDirect();
+        }
     }
 </script>
 

@@ -7,7 +7,6 @@
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="https://images.rawpixel.com/image_png_800/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIzLTA4L3Jhd3BpeGVsX29mZmljZV8yOF92ZWN0b3JfaWxsdXN0cmF0aW9uX29mX2FfZ2FyYmFnZV90cnVja19pc29sYXRlZF9hYjg2MWZhMy05YzM1LTQ1OGEtOTBhNS0wZTU1Mjg5MDNmNDIucG5n.png">
     <meta name="theme-color" content="#2e7d32">
-    <!-- Chargement de Supabase pour connecter la base de données -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { 
@@ -171,12 +170,13 @@
         navigator.serviceWorker.register('sw.js');
     }
 
-    // CONFIGURATION SUPABASE (A REMPLIR AVEC VOS INFOS)
-    const SUPABASE_URL = " https://xcncxagmsopmlryiklcm.supabase.co/rest/v1/"; 
-    const SUPABASE_KEY = " sb_publishable_XY13fL2TWqDJWFaY6AhuAg_28V69Ov1";
+    // VOS CLÉS INTEGRÉES ET NETTOYÉES
+    const URL_DU_SERVEUR = "https://xcncxagmsopmlryiklcm.supabase.co"; 
+    const CLE_DU_SERVEUR = "sb_publishable_XY13fL2TWqDJWFaY6AhuAg_28V69Ov1";
     
-    ```javascript
-   const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // Connexion sécurisée
+    const maBaseDonnees = supabase.createClient(URL_DU_SERVEUR, CLE_DU_SERVEUR);
+
     document.getElementById('date').valueAsDate = new Date();
     
     if(localStorage.getItem('nomChauffeur')) {
@@ -189,7 +189,7 @@
         const liste = document.getElementById('history');
         const totalSpan = document.getElementById('total-tonnage');
         
-        let { data: tonnages, error } = await supabase
+        let { data: tonnages, error } = await maBaseDonnees
             .from('tonnages')
             .select('*')
             .order('id', { ascending: false });
@@ -203,15 +203,17 @@
         liste.innerHTML = '';
         let total = 0;
 
-        if(tonnages.length === 0) {
+        if(!tonnages || tonnages.length === 0) {
             liste.innerHTML = '<li class="loading">Aucun tonnage enregistré pour le moment.</li>';
+            totalSpan.textContent = "0";
+            return;
         }
 
         tonnages.forEach(item => {
-            total += parseFloat(item.tonnage);
+            total += parseFloat(item.tonnage || 0);
             
             const dateObj = new Date(item.date);
-            const dateFormatee = dateObj.toLocaleDateString('fr-FR');
+            const dateFormatee = isNaN(dateObj) ? item.date : dateObj.toLocaleDateString('fr-FR');
 
             const li = document.createElement('li');
             li.className = 'history-item';
@@ -241,7 +243,7 @@
 
         localStorage.setItem('nomChauffeur', chauffeurInput);
 
-        const { error } = await supabase
+        const { error } = await maBaseDonnees
             .from('tonnages')
             .insert([
                 { chauffeur: chauffeurInput, date: dateInput, tonnage: tonnageInput, note: noteInput }
@@ -261,7 +263,7 @@
 
     async function supprimerEntree(id) {
         if(confirm("Supprimer définitivement cette ligne pour TOUTE l'équipe ?")) {
-            const { error } = await supabase
+            const { error } = await maBaseDonnees
                 .from('tonnages')
                 .delete()
                 .eq('id', id);

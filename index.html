@@ -1,0 +1,218 @@
+< OCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Tonnage Rippers</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2e7d32">
+    <style>
+        :root { 
+            --primary: #2e7d32; 
+            --secondary: #4caf50; 
+            --background: #f5f5f5; 
+            --text: #333; 
+        }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+            background-color: var(--background); 
+            color: var(--text); 
+            margin: 0; 
+            padding: 15px; 
+        }
+        .container { 
+            max-width: 500px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 15px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+        }
+        h1 { 
+            text-align: center; 
+            color: var(--primary); 
+            font-size: 24px; 
+            margin-top: 0; 
+        }
+        .form-group { 
+            margin-bottom: 15px; 
+        }
+        label { 
+            display: block; 
+            margin-bottom: 5px; 
+            font-weight: bold; 
+        }
+        input, textarea { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            border-radius: 8px; 
+            box-sizing: border-box; 
+            font-size: 16px; 
+        }
+        button { 
+            width: 100%; 
+            padding: 12px; 
+            background-color: var(--primary); 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            cursor: pointer; 
+        }
+        button:active { 
+            background-color: var(--secondary); 
+        }
+        .total-box { 
+            background: #e8f5e9; 
+            border-left: 5px solid var(--primary); 
+            padding: 10px; 
+            margin: 20px 0; 
+            border-radius: 0 8px 8px 0; 
+            font-size: 18px; 
+            font-weight: bold; 
+        }
+        h2 { 
+            font-size: 18px; 
+            border-bottom: 2px solid #eee; 
+            padding-bottom: 5px; 
+        }
+        .history-list { 
+            list-style: none; 
+            padding: 0; 
+            max-height: 250px; 
+            overflow-y: auto; 
+        }
+        .history-item { 
+            background: #f9f9f9; 
+            padding: 10px; 
+            margin-bottom: 8px; 
+            border-radius: 6px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border: 1px solid #eee; 
+        }
+        .history-details { 
+            font-size: 14px; 
+            color: #666; 
+        }
+        .delete-btn { 
+            background: #c62828; 
+            color: white; 
+            border: none; 
+            padding: 5px 10px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-size: 12px; 
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Suivi Tonnage 🚛</h1>
+    
+    <div class="form-group">
+        <label for="date">Date</label>
+        <input type="date" id="date">
+    </div>
+    
+    <div class="form-group">
+        <label for="tonnage">Tonnage (en tonnes)</label>
+        <input type="number" id="tonnage" step="0.01" placeholder="Ex: 12.45" inputmode="decimal">
+    </div>
+    
+    <div class="form-group">
+        <label for="note">Commentaire / Tournée</label>
+        <textarea id="note" rows="2" placeholder="Ex: Tournée Nord, Camion 4B"></textarea>
+    </div>
+    
+    <button onclick="ajouterTonnage()">Enregistrer la journée</button>
+    
+    <div class="total-box">
+        Total Cumulé : <span id="total-tonnage">0</span> t
+    </div>
+    
+    <h2>Historique</h2>
+    <ul id="history" class="history-list"></ul>
+</div>
+
+<script>
+    // Enregistrement du Service Worker pour le mode hors-ligne
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js');
+    }
+
+    document.getElementById('date').valueAsDate = new Date();
+    let sauvegardes = JSON.parse(localStorage.getItem('tonnagesRippeurs')) || [];
+    afficherDonnees();
+
+    function ajouterTonnage() {
+        const dateInput = document.getElementById('date').value;
+        const tonnageInput = parseFloat(document.getElementById('tonnage').value);
+        const noteInput = document.getElementById('note').value;
+
+        if (!dateInput || isNaN(tonnageInput)) { 
+            alert("Veuillez remplir la date et le tonnage !"); 
+            return; 
+        }
+
+        const dateObj = new Date(dateInput);
+        const dateFormatee = dateObj.toLocaleDateString('fr-FR');
+
+        const nouvelleEntree = { 
+            id: Date.now(), 
+            date: dateFormatee, 
+            rawDate: dateInput, 
+            tonnage: tonnageInput, 
+            note: noteInput 
+        };
+
+        sauvegardes.push(nouvelleEntree);
+        sauvegardes.sort((a, b) => new Date(b.rawDate) - new Date(a.rawDate));
+        
+        localStorage.setItem('tonnagesRippeurs', JSON.stringify(sauvegardes));
+        
+        document.getElementById('tonnage').value = '';
+        document.getElementById('note').value = '';
+        
+        afficherDonnees();
+    }
+
+    function supprimerEntree(id) {
+        if(confirm("Supprimer cette ligne ?")) {
+            sauvegardes = sauvegardes.filter(item => item.id !== id);
+            localStorage.setItem('tonnagesRippeurs', JSON.stringify(sauvegardes));
+            afficherDonnees();
+        }
+    }
+
+    function afficherDonnees() {
+        const liste = document.getElementById('history');
+        const totalSpan = document.getElementById('total-tonnage');
+        liste.innerHTML = '';
+        let total = 0;
+
+        sauvegardes.forEach(item => {
+            total += item.tonnage;
+            const li = document.createElement('li');
+            li.className = 'history-item';
+            li.innerHTML = `
+                <div>
+                    <strong>${item.date} : ${item.tonnage} t</strong>
+                    <div class="history-details">${item.note ? item.note : ''}</div>
+                </div>
+                <button class="delete-btn" onclick="supprimerEntree(${item.id})">X</button>
+            `;
+            liste.appendChild(li);
+        });
+        totalSpan.textContent = total.toFixed(2);
+    }
+</script>
+
+</body>
+</html>
+!D
+

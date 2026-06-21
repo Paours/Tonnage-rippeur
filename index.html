@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Suivi Tonnage Général</title>
-    <link rel="manifest" href="manifest.json?v=9">
+    <link rel="manifest" href="manifest.json?v=10">
     <meta name="theme-color" content="#2e7d32">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { 
             --primary: #2e7d32; 
@@ -41,19 +42,21 @@
             display: flex;
             margin-bottom: 15px;
             border-bottom: 2px solid #eee;
+            overflow-x: auto; /* Permet de scroller si l'écran est petit */
+            white-space: nowrap;
         }
         .tab-btn {
             flex: 1;
-            padding: 10px;
+            padding: 10px 5px;
             background: none;
             border: none;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: bold;
             color: #666;
             cursor: pointer;
             border-bottom: 3px solid transparent;
             border-radius: 0;
-            width: auto;
+            min-width: 80px;
         }
         .tab-btn.active {
             color: var(--primary);
@@ -168,6 +171,24 @@
         .chauffeur-ligne:last-child {
             border-bottom: none;
         }
+
+        /* Style pour l'onglet Graphiques */
+        .chart-container {
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .chart-container h3 {
+            margin-top: 0;
+            font-size: 15px;
+            color: #555;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
     </style>
 </head>
 <body>
@@ -179,6 +200,7 @@
         <button class="tab-btn active" onclick="changerOnglet('saisir', event)">Saisir</button>
         <button class="tab-btn" onclick="changerOnglet('historique', event)">Historique</button>
         <button class="tab-btn" onclick="changerOnglet('chauffeurs', event)">Par Chauffeur</button>
+        <button class="tab-btn" onclick="changerOnglet('graphiques', event)">Graphiques</button>
     </div>
 
     <div id="tab-saisir" class="tab-content active">
@@ -220,11 +242,24 @@
         <div id="listing-chauffeurs">
             </div>
     </div>
+
+    <div id="tab-graphiques" class="tab-content">
+        <div class="chart-container">
+            <h3>📈 Tonnage par Jour (30 derniers jours)</h3>
+            <canvas id="chartJours"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>📊 Tonnage par Mois (Évolution globale)</h3>
+            <canvas id="chartMois"></canvas>
+        </div>
+    </div>
 </div>
 
 <script>
     const FIREBASE_URL = "https://tonnage-rippeurs-a4bb4-default-rtdb.firebaseio.com/";
     let toutesLesDonneesFirebase = [];
+    let chartJoursInstance = null;
+    let chartMoisInstance = null;
 
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js');
@@ -240,8 +275,15 @@
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
         
-        event.target.classList.add('active');
+        if (event) {
+            event.target.classList.add('active');
+        }
         document.getElementById(`tab-${tabId}`).classList.add('active');
+        
+        // Si on clique sur l'onglet graphiques, on force le rendu pour éviter les bugs d'affichage de taille
+        if(tabId === 'graphiques') {
+            genererGraphiques();
+        }
     }
 
     recupererDonneesFirebase();
@@ -400,9 +442,91 @@
                 `;
                 divChauffeurs.appendChild(bloc);
             });
+
+            // Si l'onglet en cours est celui des graphiques, on les actualise en tâche de fond
+            if(document.getElementById('tab-graphiques').classList.contains('active')) {
+                genererGraphiques();
+            }
         })
         .catch(() => {
             console.log("Erreur de récupération.");
+        });
+    }
+
+    function genererGraphiques() {
+        if (toutesLesDonneesFirebase.length === 0) return;
+
+        // --- 1. TRAITEMENT POUR LE GRAPHIQUE PAR JOUR (30 derniers jours) ---
+        const totauxParJour = {};
+        toutesLesDonneesFirebase.forEach(item => {
+            totauxParJour[item.rawDate] = (totauxParJour[item.rawDate] || 0) + item.tonnage;
+        });
+
+        // Récupérer et trier les dates chronologiquement, puis isoler les 30 dernières
+        const joursTries = Object.keys(totauxParJour).sort();
+        const derniersJours = joursTries.slice(-30);
+        
+        const labelsJours = derniersJours.map(j => {
+            const d = new Date(j);
+            return d.toLocaleDateString('fr-FR', {day: 'numeric', month: 'short'});
+        });
+        const dataJours = derniersJours.map(j => totauxParJour[j]);
+
+        // Configuration Graphique Jour
+        if (chartJoursInstance) chartJoursInstance.destroy();
+        const ctxJours = document.getElementById('chartJours').getContext('2d');
+        chartJoursInstance = new Chart(ctxJours, {
+            type: 'line',
+            data: {
+                labels: labelsJours,
+                datasets: [{
+                    label: 'Tonnes',
+                    data: dataJours,
+                    borderColor: '#1e88e5',
+                    backgroundColor: 'rgba(30, 136, 229, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.2,
+                    fill: true
+                }]
+            },
+            options: { responsive: true, scales: { y: { beginAtZero: true } } }
+        });
+
+
+        // --- 2. TRAITEMENT POUR LE GRAPHIQUE PAR MOIS ---
+        const totauxParMois = {};
+        const nomsMois = ["Janv", "Févr", "Mars", "Avril", "Mai", "Juin", "Juil", "Août", "Sept", "Oct", "Nov", "Déc"];
+
+        toutesLesDonneesFirebase.forEach(item => {
+            if (item.rawDate) {
+                const dateObj = new Date(item.rawDate);
+                const cleMois = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}`;
+                totauxParMois[cleMois] = (totauxParMois[cleMois] || 0) + item.tonnage;
+            }
+        });
+
+        const moisTries = Object.keys(totauxParMois).sort();
+        const labelsMois = moisTois => moisTries.map(m => {
+            const parts = m.split('-');
+            return `${nomsMois[parseInt(parts[1]) - 1]} ${parts[0].slice(-2)}`;
+        });
+        const dataMois = moisTries.map(m => totauxParMois[m]);
+
+        // Configuration Graphique Mois
+        if (chartMoisInstance) chartMoisInstance.destroy();
+        const ctxMois = document.getElementById('chartMois').getContext('2d');
+        chartMoisInstance = new Chart(ctxMois, {
+            type: 'bar',
+            data: {
+                labels: labelsMois(),
+                datasets: [{
+                    label: 'Total Tonnes / Mois',
+                    data: dataMois,
+                    backgroundColor: '#2e7d32',
+                    borderRadius: 5
+                }]
+            },
+            options: { responsive: true, scales: { y: { beginAtZero: true } } }
         });
     }
 </script>

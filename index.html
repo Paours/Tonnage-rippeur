@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Suivi Tonnage Général</title>
-    <link rel="manifest" href="manifest.json?v=4">
+    <link rel="manifest" href="manifest.json?v=6">
     <meta name="theme-color" content="#2e7d32">
     <style>
         :root { 
@@ -18,24 +18,56 @@
             background-color: var(--background); 
             color: var(--text); 
             margin: 0; 
-            padding: 15px; 
+            padding: 10px; 
         }
         .container { 
             max-width: 500px; 
             margin: 0 auto; 
             background: white; 
-            padding: 20px; 
+            padding: 15px; 
             border-radius: 15px; 
             box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
+            box-sizing: border-box;
         }
         h1 { 
             text-align: center; 
             color: var(--primary); 
-            font-size: 24px; 
+            font-size: 22px; 
             margin-top: 0; 
         }
+        
+        /* Système d'onglets */
+        .tabs {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: none;
+            border: none;
+            font-size: 14px;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            border-radius: 0;
+            width: auto;
+        }
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
         .form-group { 
-            margin-bottom: 15px; 
+            margin-bottom: 12px; 
         }
         label { 
             display: block; 
@@ -68,20 +100,15 @@
             background: #e8f5e9; 
             border-left: 5px solid var(--primary); 
             padding: 10px; 
-            margin: 20px 0; 
+            margin: 15px 0; 
             border-radius: 0 8px 8px 0; 
             font-size: 18px; 
             font-weight: bold; 
         }
-        h2 { 
-            font-size: 18px; 
-            border-bottom: 2px solid #eee; 
-            padding-bottom: 5px; 
-        }
         .history-list { 
             list-style: none; 
             padding: 0; 
-            max-height: 300px; 
+            max-height: 350px; 
             overflow-y: auto; 
         }
         .history-item { 
@@ -95,7 +122,7 @@
             border: 1px solid #eee; 
         }
         .history-details { 
-            font-size: 14px; 
+            font-size: 13px; 
             color: #666; 
         }
         .delete-btn { 
@@ -106,6 +133,36 @@
             border-radius: 4px; 
             cursor: pointer; 
             font-size: 12px; 
+            width: auto;
+        }
+
+        /* Style pour l'onglet Chauffeurs */
+        .chauffeur-bloc {
+            background: #f0f4f1;
+            border: 1px solid #d0e2d2;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        .chauffeur-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 16px;
+            color: var(--primary);
+            border-bottom: 1px solid #c8dcca;
+            padding-bottom: 5px;
+            margin-bottom: 8px;
+        }
+        .chauffeur-ligne {
+            font-size: 14px;
+            padding: 4px 0;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px dashed #e0e0e0;
+        }
+        .chauffeur-ligne:last-child {
+            border-bottom: none;
         }
     </style>
 </head>
@@ -114,38 +171,59 @@
 <div class="container">
     <h1>Suivi Tonnage Général 🚛</h1>
     
-    <div class="form-group">
-        <label for="chauffeur">Nom du Chauffeur</label>
-        <input type="text" id="chauffeur" placeholder="Ex: Remi">
+    <!-- Barre d'onglets -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="changerOnglet('saisir', event)">Saisir</button>
+        <button class="tab-btn" onclick="changerOnglet('historique', event)">Historique</button>
+        <button class="tab-btn" onclick="changerOnglet('chauffeurs', event)">Par Chauffeur</button>
     </div>
 
-    <div class="form-group">
-        <label for="date">Date</label>
-        <input type="date" id="date">
+    <!-- ONGLET 1 : FORMULAIRE DE SAISIE -->
+    <div id="tab-saisir" class="tab-content active">
+        <div class="form-group">
+            <label for="chauffeur">Nom du Chauffeur</label>
+            <input type="text" id="chauffeur" placeholder="Ex: Remi">
+        </div>
+
+        <div class="form-group">
+            <label for="date">Date</label>
+            <input type="date" id="date">
+        </div>
+        
+        <div class="form-group">
+            <label for="tonnage">Tonnage (en tonnes)</label>
+            <input type="number" id="tonnage" step="0.01" placeholder="Ex: 12.45" inputmode="decimal">
+        </div>
+        
+        <div class="form-group">
+            <label for="note">Commentaire / Tournée</label>
+            <textarea id="note" rows="2" placeholder="Ex: Tournée Nord, Camion 4B"></textarea>
+        </div>
+        
+        <button onclick="ajouterTonnage()">Enregistrer la journée</button>
+        
+        <div class="total-box">
+            Total Cumulé Global : <span id="total-tonnage-saisie">0</span> t
+        </div>
     </div>
-    
-    <div class="form-group">
-        <label for="tonnage">Tonnage (en tonnes)</label>
-        <input type="number" id="tonnage" step="0.01" placeholder="Ex: 12.45" inputmode="decimal">
+
+    <!-- ONGLET 2 : HISTORIQUE GLOBAL -->
+    <div id="tab-historique" class="tab-content">
+        <div class="total-box">
+            Total Global : <span id="total-tonnage-hist">0</span> t
+        </div>
+        <ul id="history" class="history-list"></ul>
     </div>
-    
-    <div class="form-group">
-        <label for="note">Commentaire / Tournée</label>
-        <textarea id="note" rows="2" placeholder="Ex: Tournée Nord, Camion 4B"></textarea>
+
+    <!-- ONGLET 3 : LISTING PAR CHAUFFEUR -->
+    <div id="tab-chauffeurs" class="tab-content">
+        <div id="listing-chauffeurs">
+            <!-- Rempli automatiquement par le script -->
+        </div>
     </div>
-    
-    <button onclick="ajouterTonnage()">Enregistrer la journée</button>
-    
-    <div class="total-box">
-        Total Cumulé Global : <span id="total-tonnage">0</span> t
-    </div>
-    
-    <h2>Historique Équipe (En direct)</h2>
-    <ul id="history" class="history-list"></ul>
 </div>
 
 <script>
-    // Ton adresse Firebase configurée
     const FIREBASE_URL = "https://tonnage-rippeurs-a4bb4-default-rtdb.firebaseio.com/";
 
     if ('serviceWorker' in navigator) {
@@ -158,7 +236,16 @@
         document.getElementById('chauffeur').value = localStorage.getItem('dernierChauffeur');
     }
 
-    // Charger les données en direct au démarrage
+    // Gestion du changement d'onglet
+    function changerOnglet(tabId, event) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        
+        event.target.classList.add('active');
+        document.getElementById(`tab-${tabId}`).classList.add('active');
+    }
+
+    // Charger les données au démarrage
     recupererDonneesFirebase();
 
     function ajouterTonnage() {
@@ -183,7 +270,6 @@
             note: noteInput 
         };
 
-        // Envoi direct à Firebase
         fetch(`${FIREBASE_URL}/tonnages.json`, {
             method: 'POST',
             body: JSON.stringify(nouvelleEntree)
@@ -193,9 +279,10 @@
             localStorage.setItem('dernierChauffeur', chauffeurInput);
             document.getElementById('tonnage').value = '';
             document.getElementById('note').value = '';
-            recupererDonneesFirebase(); // Recharger la liste
+            recupererDonneesFirebase();
+            alert("Enregistré avec succès !");
         })
-        .catch(error => {
+        .catch(() => {
             alert("Erreur lors de l'enregistrement. Vérifiez votre connexion internet.");
         });
     }
@@ -214,24 +301,36 @@
         .then(res => res.json())
         .then(data => {
             const liste = document.getElementById('history');
-            const totalSpan = document.getElementById('total-tonnage');
+            const totalSaisie = document.getElementById('total-tonnage-saisie');
+            const totalHist = document.getElementById('total-tonnage-hist');
+            const divChauffeurs = document.getElementById('listing-chauffeurs');
+            
             liste.innerHTML = '';
-            let total = 0;
+            divChauffeurs.innerHTML = '';
+            let totalGlobal = 0;
 
             if (!data) {
-                liste.innerHTML = '<li style="color:#666; font-style:italic; text-align:center; padding:10px;">Aucun tonnage enregistré pour le moment.</li>';
-                totalSpan.textContent = "0";
+                const vide = '<li style="color:#666; font-style:italic; text-align:center; padding:10px;">Aucun tonnage enregistré.</li>';
+                liste.innerHTML = vide;
+                divChauffeurs.innerHTML = '<p style="color:#666; font-style:italic; text-align:center;">Aucune donnée par chauffeur.</p>';
+                totalSaisie.textContent = "0";
+                totalHist.textContent = "0";
                 return;
             }
 
-            // Convertir l'objet Firebase en tableau et trier du plus récent au plus ancien
+            // Convertir et trier l'historique global
             const listeTriee = Object.keys(data).map(key => ({
                 id: key,
                 ...data[key]
             })).sort((a, b) => new Date(b.rawDate) - new Date(a.rawDate));
 
+            // Objet pour regrouper les données par chauffeur
+            const donneesParChauffeur = {};
+
             listeTriee.forEach(item => {
-                total += item.tonnage;
+                totalGlobal += item.tonnage;
+                
+                // 1. Remplir l'onglet Historique Global
                 const li = document.createElement('li');
                 li.className = 'history-item';
                 li.innerHTML = `
@@ -242,11 +341,50 @@
                     <button class="delete-btn" onclick="supprimerEntree('${item.id}')">X</button>
                 `;
                 liste.appendChild(li);
+
+                // 2. Organiser par Chauffeur pour l'onglet 3
+                const nomChauffeur = item.chauffeur.toUpperCase();
+                if (!donneesParChauffeur[nomChauffeur]) {
+                    donneesParChauffeur[nomChauffeur] = {
+                        total: 0,
+                        tournees: []
+                    };
+                }
+                donneesParChauffeur[nomChauffeur].total += item.tonnage;
+                donneesParChauffeur[nomChauffeur].tournees.push(item);
             });
-            totalSpan.textContent = total.toFixed(2);
+
+            // Mettre à jour les totaux globaux visibles
+            totalSaisie.textContent = totalGlobal.toFixed(2);
+            totalHist.textContent = totalGlobal.toFixed(2);
+
+            // 3. Remplir l'onglet Par Chauffeur
+            Object.keys(donneesParChauffeur).sort().forEach(nom => {
+                const bloc = document.createElement('div');
+                bloc.className = 'chauffeur-bloc';
+                
+                let lignesHTML = '';
+                donneesParChauffeur[nom].tournees.forEach(t => {
+                    lignesHTML += `
+                        <div class="chauffeur-ligne">
+                            <span>📅 ${t.date} ${t.note ? `(${t.note})` : ''}</span>
+                            <strong>${t.tonnage.toFixed(2)} t</strong>
+                        </div>
+                    `;
+                });
+
+                bloc.innerHTML = `
+                    <div class="chauffeur-header">
+                        <span>👤 ${nom}</span>
+                        <span>Total : ${donneesParChauffeur[nom].total.toFixed(2)} t</span>
+                    </div>
+                    ${lignesHTML}
+                `;
+                divChauffeurs.appendChild(bloc);
+            });
         })
         .catch(() => {
-            console.log("Erreur de récupération ou mode hors-ligne.");
+            console.log("Erreur de récupération.");
         });
     }
 </script>

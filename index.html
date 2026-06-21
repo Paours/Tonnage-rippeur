@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mon Tonnage Rippers</title>
+    <title>Suivi Tonnage Général</title>
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="https://images.rawpixel.com/image_png_800/cHJpdmF0ZS9sci9pbWFnZXMvd2Vic2l0ZS8yMDIzLTA4L3Jhd3BpeGVsX29mZmljZV8yOF92ZWN0b3JfaWxsdXN0cmF0aW9uX29mX2FfZ2FyYmFnZV90cnVja19pc29sYXRlZF9hYjg2MWZhMy05YzM1LTQ1OGEtOTBhNS0wZTU1Mjg5MDNmNDIucG5n.png">
     <meta name="theme-color" content="#2e7d32">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { 
             --primary: #2e7d32; 
@@ -44,7 +42,7 @@
             margin-bottom: 5px; 
             font-weight: bold; 
         }
-        input, textarea, select { 
+        input, textarea { 
             width: 100%; 
             padding: 10px; 
             border: 1px solid #ccc; 
@@ -83,7 +81,7 @@
         .history-list { 
             list-style: none; 
             padding: 0; 
-            max-height: 350px; 
+            max-height: 300px; 
             overflow-y: auto; 
         }
         .history-item { 
@@ -97,19 +95,8 @@
             border: 1px solid #eee; 
         }
         .history-details { 
-            font-size: 13px; 
+            font-size: 14px; 
             color: #666; 
-            margin-top: 3px; 
-        }
-        .badge-chauffeur {
-            background: #e0e0e0;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 11px;
-            font-weight: bold;
-            color: #444;
-            display: inline-block;
-            margin-bottom: 3px;
         }
         .delete-btn { 
             background: #c62828; 
@@ -120,12 +107,6 @@
             cursor: pointer; 
             font-size: 12px; 
         }
-        .loading {
-            text-align: center;
-            color: #666;
-            font-style: italic;
-            padding: 10px;
-        }
     </style>
 </head>
 <body>
@@ -135,7 +116,7 @@
     
     <div class="form-group">
         <label for="chauffeur">Nom du Chauffeur</label>
-        <input type="text" id="chauffeur" placeholder="Ex: Jean / Thomas" required>
+        <input type="text" id="chauffeur" placeholder="Ex: Remi">
     </div>
 
     <div class="form-group">
@@ -153,84 +134,34 @@
         <textarea id="note" rows="2" placeholder="Ex: Tournée Nord, Camion 4B"></textarea>
     </div>
     
-    <button onclick="ajouterTonnage()">Enregistrer pour l'équipe</button>
+    <button onclick="ajouterTonnage()">Enregistrer la journée</button>
     
     <div class="total-box">
         Total Cumulé Global : <span id="total-tonnage">0</span> t
     </div>
     
     <h2>Historique Équipe (En direct)</h2>
-    <ul id="history" class="history-list">
-        <li class="loading">Connexion à la base de données...</li>
-    </ul>
+    <ul id="history" class="history-list"></ul>
 </div>
 
 <script>
+    // Ton adresse Firebase configurée
+    const FIREBASE_URL = "https://tonnage-rippeurs-a4bb4-default-rtdb.firebaseio.com/";
+
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('sw.js');
     }
 
-    // VOS CLÉS INTEGRÉES ET NETTOYÉES
-    const URL_DU_SERVEUR = "https://xcncxagmsopmlryiklcm.supabase.co"; 
-    const CLE_DU_SERVEUR = "sb_publishable_XY13fL2TWqDJWFaY6AhuAg_28V69Ov1";
-    
-    // Connexion sécurisée
-    const maBaseDonnees = supabase.createClient(URL_DU_SERVEUR, CLE_DU_SERVEUR);
-
     document.getElementById('date').valueAsDate = new Date();
     
-    if(localStorage.getItem('nomChauffeur')) {
-        document.getElementById('chauffeur').value = localStorage.getItem('nomChauffeur');
+    if(localStorage.getItem('dernierChauffeur')) {
+        document.getElementById('chauffeur').value = localStorage.getItem('dernierChauffeur');
     }
 
-    chargerDonneesEnDirect();
+    // Charger les données en direct au démarrage
+    recupererDonneesFirebase();
 
-    async function chargerDonneesEnDirect() {
-        const liste = document.getElementById('history');
-        const totalSpan = document.getElementById('total-tonnage');
-        
-        let { data: tonnages, error } = await maBaseDonnees
-            .from('tonnages')
-            .select('*')
-            .order('id', { ascending: false });
-
-        if (error) {
-            liste.innerHTML = `<li class="loading" style="color:red;">Erreur de chargement...</li>`;
-            console.error(error);
-            return;
-        }
-
-        liste.innerHTML = '';
-        let total = 0;
-
-        if(!tonnages || tonnages.length === 0) {
-            liste.innerHTML = '<li class="loading">Aucun tonnage enregistré pour le moment.</li>';
-            totalSpan.textContent = "0";
-            return;
-        }
-
-        tonnages.forEach(item => {
-            total += parseFloat(item.tonnage || 0);
-            
-            const dateObj = new Date(item.date);
-            const dateFormatee = isNaN(dateObj) ? item.date : dateObj.toLocaleDateString('fr-FR');
-
-            const li = document.createElement('li');
-            li.className = 'history-item';
-            li.innerHTML = `
-                <div>
-                    <span class="badge-chauffeur">👤 ${item.chauffeur || 'Inconnu'}</span>
-                    <div><strong>${dateFormatee} : ${item.tonnage} t</strong></div>
-                    <div class="history-details">${item.note ? item.note : ''}</div>
-                </div>
-                <button class="delete-btn" onclick="supprimerEntree(${item.id})">X</button>
-            `;
-            liste.appendChild(li);
-        });
-        totalSpan.textContent = total.toFixed(2);
-    }
-
-    async function ajouterTonnage() {
+    function ajouterTonnage() {
         const chauffeurInput = document.getElementById('chauffeur').value.trim();
         const dateInput = document.getElementById('date').value;
         const tonnageInput = parseFloat(document.getElementById('tonnage').value);
@@ -241,39 +172,82 @@
             return; 
         }
 
-        localStorage.setItem('nomChauffeur', chauffeurInput);
+        const dateObj = new Date(dateInput);
+        const dateFormatee = dateObj.toLocaleDateString('fr-FR');
 
-        const { error } = await maBaseDonnees
-            .from('tonnages')
-            .insert([
-                { chauffeur: chauffeurInput, date: dateInput, tonnage: tonnageInput, note: noteInput }
-            ]);
+        const nouvelleEntree = { 
+            chauffeur: chauffeurInput,
+            date: dateFormatee, 
+            rawDate: dateInput, 
+            tonnage: tonnageInput, 
+            note: noteInput 
+        };
 
-        if (error) {
+        // Envoi direct à Firebase
+        fetch(`${FIREBASE_URL}/tonnages.json`, {
+            method: 'POST',
+            body: JSON.stringify(nouvelleEntree)
+        })
+        .then(response => {
+            if(!response.ok) throw new Error();
+            localStorage.setItem('dernierChauffeur', chauffeurInput);
+            document.getElementById('tonnage').value = '';
+            document.getElementById('note').value = '';
+            recupererDonneesFirebase(); // Recharger la liste
+        })
+        .catch(error => {
             alert("Erreur lors de l'enregistrement. Vérifiez votre connexion internet.");
-            console.error(error);
-            return;
-        }
-        
-        document.getElementById('tonnage').value = '';
-        document.getElementById('note').value = '';
-        
-        chargerDonneesEnDirect();
+        });
     }
 
-    async function supprimerEntree(id) {
-        if(confirm("Supprimer définitivement cette ligne pour TOUTE l'équipe ?")) {
-            const { error } = await maBaseDonnees
-                .from('tonnages')
-                .delete()
-                .eq('id', id);
+    function supprimerEntree(firebaseId) {
+        if(confirm("Supprimer cette ligne pour toute l'équipe ?")) {
+            fetch(`${FIREBASE_URL}/tonnages/${firebaseId}.json`, {
+                method: 'DELETE'
+            })
+            .then(() => recupererDonneesFirebase());
+        }
+    }
 
-            if (error) {
-                alert("Impossible de supprimer.");
+    function recupererDonneesFirebase() {
+        fetch(`${FIREBASE_URL}/tonnages.json`)
+        .then(res => res.json())
+        .then(data => {
+            const liste = document.getElementById('history');
+            const totalSpan = document.getElementById('total-tonnage');
+            liste.innerHTML = '';
+            let total = 0;
+
+            if (!data) {
+                liste.innerHTML = '<li style="color:#666; font-style:italic; text-align:center; padding:10px;">Aucun tonnage enregistré pour le moment.</li>';
+                totalSpan.textContent = "0";
                 return;
             }
-            chargerDonneesEnDirect();
-        }
+
+            // Convertir l'objet Firebase en tableau et trier du plus récent au plus ancien
+            const listeTriee = Object.keys(data).map(key => ({
+                id: key,
+                ...data[key]
+            })).sort((a, b) => new Date(b.rawDate) - new Date(a.rawDate));
+
+            listeTriee.forEach(item => {
+                total += item.tonnage;
+                const li = document.createElement('li');
+                li.className = 'history-item';
+                li.innerHTML = `
+                    <div>
+                        <strong>${item.date} - ${item.chauffeur} : ${item.tonnage} t</strong>
+                        <div class="history-details">${item.note ? item.note : ''}</div>
+                    </div>
+                    <button class="delete-btn" onclick="supprimerEntree('${item.id}')">X</button>
+                `;
+                liste.appendChild(li);
+            });
+            totalSpan.textContent = total.toFixed(2);
+        })
+        .catch(() => {
+            console.log("Erreur de récupération ou mode hors-ligne.");
+        });
     }
 </script>
 

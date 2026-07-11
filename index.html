@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Suivi Tonnage Général</title>
-    <link rel="manifest" href="manifest.json?v=12">
+    <link rel="manifest" href="manifest.json?v=13">
     <meta name="theme-color" content="#2e7d32">
     <!-- Intégration de Chart.js pour les graphiques -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -356,6 +356,14 @@
         
         if (event) {
             event.target.classList.add('active');
+        } else {
+            // Si pas d'événement direct, on cherche le bouton correspondant
+            const boutons = document.querySelectorAll('.tab-btn');
+            boutons.forEach(btn => {
+                if(btn.textContent.toLowerCase().includes(tabId.substring(0,3))) {
+                    btn.classList.add('active');
+                }
+            });
         }
         document.getElementById(`tab-${tabId}`).classList.add('active');
         
@@ -387,7 +395,7 @@
             rawDate: dateInput, 
             tonnage: tonnageInput, 
             note: noteInput,
-            typeFlux: typeFluxInput // Sauvegarde du type (Noir ou Jaune)
+            typeFlux: typeFluxInput
         };
 
         fetch(`${FIREBASE_URL}/tonnages.json`, {
@@ -442,7 +450,7 @@
                 if(item.typeFlux === 'Jaune') {
                     totalJaune += item.tonnage;
                 } else {
-                    totalNoir += item.tonnage; // Par défaut ou si 'Noir'
+                    totalNoir += item.tonnage;
                 }
             }
         });
@@ -599,12 +607,11 @@
     function genererGraphiques() {
         if (toutesLesDonneesFirebase.length === 0) return;
 
-        // --- 1. TRAITEMENT PAR JOUR (30 derniers jours) ---
-        const joursNoir = {}, joursJaune = {}, tousJours Set = new Set();
+        // --- 1. TRAITEMENT PAR JOUR ---
+        const joursNoir = {}, joursJaune = {}, tousJours = new Set();
         toutesLesDonneesFirebase.forEach(item => {
             tousJours.add(item.rawDate);
-            const flx = item.typeFlux === 'Jaune' ? 'J' : 'N';
-            if(flx === 'J') {
+            if(item.typeFlux === 'Jaune') {
                 joursJaune[item.rawDate] = (joursJaune[item.rawDate] || 0) + item.tonnage;
             } else {
                 joursNoir[item.rawDate] = (joursNoir[item.rawDate] || 0) + item.tonnage;

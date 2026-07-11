@@ -1,6 +1,6 @@
 {
-  "name": "Suivi Tonnage Général",
-  "short_name": "Tonnage Rippers",
+  "name": "Balance tes poubelles",
+  "short_name": "Balance tes poubelles",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#f5f5f5",

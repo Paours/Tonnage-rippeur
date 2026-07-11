@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Suivi Tonnage Général</title>
-    <link rel="manifest" href="manifest.json?v=13">
+    <title>Balance tes poubelles</title>
+    <link rel="manifest" href="manifest.json?v=14">
     <meta name="theme-color" content="#2e7d32">
     <!-- Intégration de Chart.js pour les graphiques -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -34,8 +34,9 @@
         h1 { 
             text-align: center; 
             color: var(--primary); 
-            font-size: 22px; 
-            margin-top: 0; 
+            font-size: 24px; 
+            margin-top: 5px; 
+            margin-bottom: 15px;
         }
         
         /* Système d'onglets */
@@ -245,7 +246,7 @@
 <body>
 
 <div class="container">
-    <h1>Suivi Tonnage Général 🚛</h1>
+    <h1>Balance tes poubelles ⬛🟨</h1>
     
     <!-- Barre d'onglets -->
     <div class="tabs">
@@ -357,7 +358,6 @@
         if (event) {
             event.target.classList.add('active');
         } else {
-            // Si pas d'événement direct, on cherche le bouton correspondant
             const boutons = document.querySelectorAll('.tab-btn');
             boutons.forEach(btn => {
                 if(btn.textContent.toLowerCase().includes(tabId.substring(0,3))) {

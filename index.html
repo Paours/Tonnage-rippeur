@@ -601,6 +601,562 @@
             flex-wrap: wrap;
         }
         
+        .tabs {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #eee;
+            overflow-x: auto;
+            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+        }
+        .tabs::-webkit-scrollbar {
+            display: none;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 10px 8px;
+            background: none;
+            border: none;
+            font-size: 12px;
+            font-weight: bold;
+            color: #666;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            border-radius: 0;
+            min-width: 85px;
+            text-align: center;
+            white-space: nowrap;
+        }
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group { 
+            margin-bottom: 12px; 
+        }
+        label { 
+            display: block; 
+            margin-bottom: 5px; 
+            font-weight: bold; 
+        }
+        input, textarea { 
+            width: 100%; 
+            padding: 10px; 
+            border: 1px solid #ccc; 
+            border-radius: 8px; 
+            box-sizing: border-box; 
+            font-size: 16px; 
+        }
+        
+        .radio-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+        .radio-label {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            background: #f5f5f5;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .radio-group input[type="radio"] {
+            display: none;
+        }
+        .radio-group input[type="radio"]:checked + .radio-label.type-noir {
+            background: #333;
+            color: white;
+            border-color: #000;
+        }
+        .radio-group input[type="radio"]:checked + .radio-label.type-jaune {
+            background: #fbc02d;
+            color: #333;
+            border-color: #f57f17;
+        }
+
+        button { 
+            width: 100%; 
+            padding: 12px; 
+            background-color: var(--primary); 
+            color: white; 
+            border: none; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            margin-top: 5px;
+        }
+        button:active { 
+            background-color: var(--secondary); 
+        }
+        
+        button.btn-edition {
+            background-color: var(--edit-color);
+        }
+        button.btn-annuler {
+            background-color: #757575;
+            margin-top: 8px;
+        }
+
+        .total-box { 
+            background: #e8f5e9; 
+            border-left: 5px solid var(--primary); 
+            padding: 10px; 
+            margin: 8px 0; 
+            border-radius: 0 8px 8px 0; 
+            font-size: 15px; 
+            font-weight: bold; 
+        }
+        .total-box.date-specific {
+            background: #e3f2fd;
+            border-left-color: #1e88e5;
+        }
+        .total-box.mini-box {
+            background: #f1f8e9;
+            border-left-color: #7cb342;
+            font-size: 14px;
+            margin: 5px 0;
+        }
+        .total-detail {
+            font-size: 12px;
+            color: #555;
+            font-weight: normal;
+            margin-top: 4px;
+        }
+        .history-list { 
+            list-style: none; 
+            padding: 0; 
+            max-height: 350px; 
+            overflow-y: auto; 
+            margin-top: 15px;
+        }
+        .history-item { 
+            background: #f9f9f9; 
+            padding: 10px; 
+            margin-bottom: 8px; 
+            border-radius: 6px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border: 1px solid #eee; 
+        }
+        .history-details { 
+            font-size: 13px; 
+            color: #666; 
+        }
+        .action-btns {
+            display: flex;
+            gap: 5px;
+        }
+        .edit-btn {
+            background: var(--edit-color);
+            color: white;
+            border: none;
+            padding: 5px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            width: auto;
+            margin: 0;
+        }
+        .delete-btn { 
+            background: #c62828; 
+            color: white; 
+            border: none; 
+            padding: 5px 10px; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-size: 12px; 
+            width: auto;
+            margin: 0;
+        }
+
+        .chauffeur-bloc {
+            background: #f0f4f1;
+            border: 1px solid #d0e2d2;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        .chauffeur-header {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 15px;
+            color: var(--primary);
+            border-bottom: 1px solid #c8dcca;
+            padding-bottom: 5px;
+            margin-bottom: 8px;
+        }
+        .chauffeur-ligne {
+            font-size: 13px;
+            padding: 4px 0;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px dashed #e0e0e0;
+        }
+        .chauffeur-ligne:last-child {
+            border-bottom: none;
+        }
+
+        .chart-container {
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .chart-container h3 {
+            margin-top: 0;
+            font-size: 15px;
+            color: #555;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        
+        .mode-edition-alerte {
+            display: none;
+            background: #e1f5fe;
+            border: 1px solid #b3e5fc;
+            color: #0277bd;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Balance tes poubelles <span>⬛🟨</span></h1>
+    
+    <!-- Barre d'onglets -->
+    <div class="tabs">
+        <button class="tab-btn active" id="btn-saisir" onclick="changerOnglet('saisir')">Saisir</button>
+        <button class="tab-btn" id="btn-historique" onclick="changerOnglet('historique')">Historique</button>
+        <button class="tab-btn" id="btn-chauffeurs" onclick="changerOnglet('chauffeurs')">Par Chauffeur</button>
+        <button class="tab-btn" id="btn-graphiques" onclick="changerOnglet('graphiques')">Graphiques</button>
+    </div>
+
+    <!-- ONGLET 1 : SAISIE -->
+    <div id="tab-saisir" class="tab-content active">
+        <div id="alerte-edition" class="mode-edition-alerte">✏️ Mode modification activé</div>
+
+        <div class="form-group">
+            <label for="chauffeur">Nom du Chauffeur</label>
+            <input type="text" id="chauffeur" placeholder="Ex: Remi">
+        </div>
+
+        <div class="form-group">
+            <label for="date">Date</label>
+            <input type="date" id="date" onchange="calculerTotalDuJour()">
+        </div>
+
+        <div class="form-group">
+            <label>Type de Tournée</label>
+            <div class="radio-group">
+                <input type="radio" id="typeNoir" name="typeFlux" value="Noir" checked>
+                <label for="typeNoir" class="radio-label type-noir">⬛ Poubelle Noire</label>
+                
+                <input type="radio" id="typeJaune" name="typeFlux" value="Jaune">
+                <label for="typeJaune" class="radio-label type-jaune">🟨 Poubelle Jaune</label>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="tonnage">Tonnage (en tonnes)</label>
+            <input type="number" id="tonnage" step="0.01" placeholder="Ex: 12.45" inputmode="decimal">
+        </div>
+        
+        <div class="form-group">
+            <label for="note">Commentaire / Tournée</label>
+            <textarea id="note" rows="2" placeholder="Ex: Tournée Nord, Camion 4B"></textarea>
+        </div>
+        
+        <button id="btn-valider" onclick="executerActionFormulaire()">Enregistrer la journée</button>
+        <button id="btn-annuler-modif" class="btn-annuler" style="display:none;" onclick="quitterModeEdition()">Annuler la modification</button>
+        
+        <div class="total-box date-specific">
+            Total pour le <span id="affichage-date-choisie">--/--/----</span> : <span id="total-tonnage-jour">0</span> t
+            <div class="total-detail" id="detail-tonnage-jour">Noir : 0 t | Jaune : 0 t</div>
+        </div>
+    </div>
+
+    <!-- ONGLET 2 : HISTORIQUE -->
+    <div id="tab-historique" class="tab-content">
+        <div class="total-box mini-box">
+            📅 Cette semaine : <span id="total-tonnage-semaine">0</span> t
+            <div class="total-detail" id="detail-tonnage-semaine">Noir : 0 t | Jaune : 0 t</div>
+        </div>
+        <div class="total-box mini-box">
+            📅 Ce mois-ci : <span id="total-tonnage-mois">0</span> t
+            <div class="total-detail" id="detail-tonnage-mois">Noir : 0 t | Jaune : 0 t</div>
+        </div>
+        <div class="total-box">
+            🌍 Total Global Cumulé : <span id="total-tonnage-hist">0</span> t
+            <div class="total-detail" id="detail-tonnage-hist">Noir : 0 t | Jaune : 0 t</div>
+        </div>
+        <ul id="history" class="history-list"></ul>
+    </div>
+
+    <!-- ONGLET 3 : CHAUFFEURS -->
+    <div id="tab-chauffeurs" class="tab-content">
+        <div id="listing-chauffeurs"></div>
+    </div>
+
+    <!-- ONGLET 4 : GRAPHIQUES -->
+    <div id="tab-graphiques" class="tab-content">
+        <div class="chart-container">
+            <h3>📈 Tonnage par Jour (30 derniers jours)</h3>
+            <canvas id="chartJours"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>📊 Tonnage par Mois (Évolution globale)</h3>
+            <canvas id="chartMois"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+    const FIREBASE_URL = "https://tonnage-rippeurs-a4bb4-default-rtdb.firebaseio.com/";
+    let toutesLesDonneesFirebase = [];
+    let chartJoursInstance = null;
+    let chartMoisInstance = null;
+    let idEnCoursEdition = null; 
+
+    // Forcer la mise à jour si le service worker change
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js?v=18').then(reg => {
+            reg.update();
+        });
+    }
+
+    document.getElementById('date').valueAsDate = new Date();
+    
+    if(localStorage.getItem('dernierChauffeur')) {
+        document.getElementById('chauffeur').value = localStorage.getItem('dernierChauffeur');
+    }
+
+    // Le sélecteur d'onglet ultime, sans risque de crash
+    function changerOnglet(tabId) {
+        // 1. Masquer tous les contenus
+        const contenus = ['saisir', 'historique', 'chauffeurs', 'graphiques'];
+        contenus.forEach(id => {
+            const el = document.getElementById(`tab-${id}`);
+            if(el) el.classList.remove('active');
+            
+            const btn = document.getElementById(`btn-${id}`);
+            if(btn) btn.classList.remove('active');
+        });
+        
+        // 2. Activer la cible
+        const divCible = document.getElementById(`tab-${tabId}`);
+        const btnCible = document.getElementById(`btn-${tabId}`);
+        
+        if (divCible) divCible.classList.add('active');
+        if (btnCible) btnCible.classList.add('active');
+        
+        if(tabId === 'graphiques') {
+            genererGraphiques();
+        }
+    }
+
+    recupererDonneesFirebase();
+
+    function executerActionFormulaire() {
+        if (idEnCoursEdition) {
+            mettreAJourTonnage();
+        } else {
+            ajouterTonnage();
+        }
+    }
+
+    function ajouterTonnage() {
+        const chauffeurInput = document.getElementById('chauffeur').value.trim();
+        const dateInput = document.getElementById('date').value;
+        const tonnageInput = parseFloat(document.getElementById('tonnage').value);
+        const noteInput = document.getElementById('note').value;
+        const typeFluxInput = document.querySelector('input[name="typeFlux"]:checked').value;
+
+        if (!chauffeurInput || !dateInput || isNaN(tonnageInput)) { 
+            alert("Veuillez remplir le nom, la date et le tonnage !"); 
+            return; 
+        }
+
+        const dateObj = new Date(dateInput);
+        const dateFormatee = dateObj.toLocaleDateString('fr-FR');
+
+        const nouvelleEntree = { 
+            chauffeur: chauffeurInput,
+            date: dateFormatee, 
+            rawDate: dateInput, 
+            tonnage: tonnageInput, 
+            note: noteInput,
+            typeFlux: typeFluxInput
+        };
+
+        fetch(`${FIREBASE_URL}/tonnages.json`, {
+            method: 'POST',
+            body: JSON.stringify(nouvelleEntree)
+        })
+        .then(response => {
+            if(!response.ok) throw new Error();
+            localStorage.setItem('dernierChauffeur', chauffeurInput);
+            document.getElementById('tonnage').value = '';
+            document.getElementById('note').value = '';
+            recupererDonneesFirebase();
+            alert("Enregistré avec succès !");
+        })
+        .catch(() => {
+            alert("Erreur réseau");
+        });
+    }
+
+    function chargerEntreePourModification(id) {
+        const item = toutesLesDonneesFirebase.find(d => d.id === id);
+        if (!item) return;
+
+        idEnCoursEdition = id;
+
+        document.getElementById('chauffeur').value = item.chauffeur;
+        document.getElementById('date').value = item.rawDate || '';
+        document.getElementById('tonnage').value = item.tonnage;
+        document.getElementById('note').value = item.note || '';
+        
+        if (item.typeFlux === 'Jaune') {
+            document.getElementById('typeJaune').checked = true;
+        } else {
+            document.getElementById('typeNoir').checked = true;
+        }
+
+        document.getElementById('alerte-edition').style.display = 'block';
+        const btnValider = document.getElementById('btn-valider');
+        btnValider.textContent = "Mettre à jour l'entrée ✏️";
+        btnValider.classList.add('btn-edition');
+        document.getElementById('btn-annuler-modif').style.display = 'block';
+
+        changerOnglet('saisir');
+    }
+
+    function mettreAJourTonnage() {
+        const chauffeurInput = document.getElementById('chauffeur').value.trim();
+        const dateInput = document.getElementById('date').value;
+        const tonnageInput = parseFloat(document.getElementById('tonnage').value);
+        const noteInput = document.getElementById('note').value;
+        const typeFluxInput = document.querySelector('input[name="typeFlux"]:checked').value;
+
+        if (!chauffeurInput || !dateInput || isNaN(tonnageInput)) { 
+            alert("Veuillez remplir le nom, la date et le tonnage !"); 
+            return; 
+        }
+
+        const dateObj = new Date(dateInput);
+        const dateFormatee = dateObj.toLocaleDateString('fr-FR');
+
+        const entreeModifiee = { 
+            chauffeur: chauffeurInput,
+            date: dateFormatee, 
+            rawDate: dateInput, 
+            tonnage: tonnageInput, 
+            note: noteInput,
+            typeFlux: typeFluxInput
+        };
+
+        fetch(`${FIREBASE_URL}/tonnages/${idEnCoursEdition}.json`, {
+            method: 'PUT',
+            body: JSON.stringify(entreeModifiee)
+        })
+        .then(response => {
+            if(!response.ok) throw new Error();
+            quitterModeEdition();
+            document.getElementById('tonnage').value = '';
+            document.getElementById('note').value = '';
+            recupererDonneesFirebase();
+            alert("Modification enregistrée !");
+        })
+        .catch(() => {
+            alert("Erreur lors de la mise à jour.");
+        });
+    }
+
+    function quitterModeEdition() {
+        idEnCoursEdition = null;
+        document.getElementById('alerte-edition').style.display = 'none';
+        const btnValider = document.getElementById('btn-valider');
+        btnValider.textContent = "Enregistrer la journée";
+        btnValider.classList.remove('btn-edition');
+        document.getElementById('btn-annuler-modif').style.display = 'none';
+        
+        if(localStorage.getItem('dernierChauffeur')) {
+            document.getElementById('chauffeur').value = localStorage.getItem('dernierChauffeur');
+        }
+    }
+
+    function supprimerEntree(firebaseId) {
+        if (idEnCoursEdition === firebaseId) {
+            alert("Cette ligne est en cours de modification !");
+            return;
+        }
+        if(confirm("Supprimer cette ligne définitivement ?")) {
+            fetch(`${FIREBASE_URL}/tonnages/${firebaseId}.json`, {
+                method: 'DELETE'
+            })
+            .then(() => recupererDonneesFirebase());
+        }
+    }
+
+    function calculerTotalDuJour() {
+        const dateSelectionnee = document.getElementById('date').value;
+        const spanTotalJour = document.getElementById('total-tonnage-jour');
+        const divDetailJour = document.getElementById('detail-tonnage-jour');
+        const spanDateAffichage = document.getElementById('affichage-date-choisie');
+        
+        if (!dateSelectionnee) {
+            spanTotalJour.textContent = "0";
+            divDetailJour.textContent = "Noir : 0 t | Jaune : 0 t";
+            spanDateAffichage.textContent = "--/--/----";
+            return;
+        }
+
+        const dateObj = new Date(dateSelectionnee);
+        spanDateAffichage.textContent = dateObj.toLocaleDateString('fr-FR');
+
+        let totalJour = 0, totalNoir = 0, totalJaune = 0;
+
+        toutesLesDonneesFirebase.forEach(item => {
+            if (item.rawDate === dateSelectionnee) {
+                totalJour += item.tonnage;
+                if(item.typeFlux === 'Jaune') totalJaune += item.tonnage; else totalNoir +=            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            color: var(--primary); 
+            font-size: 22px; 
+            margin-top: 5px; 
+            margin-bottom: 15px;
+            text-align: center;
+            flex-wrap: wrap;
+        }
+        
         /* Système d'onglets corrigé pour éviter les chevauchements */
         .tabs {
             display: flex;

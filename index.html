@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Balance tes poubelles</title>
-    <link rel="manifest" href="manifest.json?v=16">
+    <link rel="manifest" href="manifest.json?v=17">
     <meta name="theme-color" content="#2e7d32">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -208,6 +208,21 @@
             color: #666; 
         }
 
+        .action-btns {
+            display: flex;
+            gap: 5px;
+        }
+
+        .edit-btn {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 6px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
         .delete-btn { 
             background: #c62828; 
             color: white; 
@@ -260,6 +275,80 @@
             color: #555;
             text-align: center;
             margin-bottom: 8px;
+        }
+
+        /* MODALE DE MODIFICATION */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 450px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            color: var(--primary);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #888;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn-cancel {
+            background: #757575;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            flex: 1;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .btn-save {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            flex: 1;
+            font-weight: bold;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -352,6 +441,47 @@
     </div>
 </div>
 
+<!-- FENÊTRE MODALE DE MODIFICATION -->
+<div id="modal-edit" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>✏️ Modifier la ligne</h2>
+            <button class="close-btn" onclick="fermerModal()">&times;</button>
+        </div>
+        <input type="hidden" id="edit-id">
+        <div class="form-group">
+            <label for="edit-chauffeur">Chauffeur</label>
+            <input type="text" id="edit-chauffeur">
+        </div>
+        <div class="form-group">
+            <label for="edit-date">Date</label>
+            <input type="date" id="edit-date">
+        </div>
+        <div class="form-group">
+            <label>Type de Flux</label>
+            <div class="radio-group">
+                <input type="radio" id="editTypeNoir" name="editTypeFlux" value="Noir">
+                <label for="editTypeNoir" class="radio-label type-noir">⬛ Noir</label>
+                
+                <input type="radio" id="editTypeJaune" name="editTypeFlux" value="Jaune">
+                <label for="editTypeJaune" class="radio-label type-jaune">🟨 Jaune</label>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="edit-tonnage">Tonnage (t)</label>
+            <input type="number" id="edit-tonnage" step="0.01" inputmode="decimal">
+        </div>
+        <div class="form-group">
+            <label for="edit-note">Commentaire</label>
+            <textarea id="edit-note" rows="2"></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="fermerModal()">Annuler</button>
+            <button class="btn-save" onclick="sauvegarderModification()">Sauvegarder</button>
+        </div>
+    </div>
+</div>
+
 <script>
     const FIREBASE_URL = "https://tonnage-rippeurs-a4bb4-default-rtdb.firebaseio.com/";
     let toutesLesDonneesFirebase = [];
@@ -424,6 +554,66 @@
         .catch(() => {
             alert("Erreur lors de l'enregistrement. Vérifiez votre connexion internet.");
         });
+    }
+
+    function ouvrirModalEdit(id) {
+        const item = toutesLesDonneesFirebase.find(x => x.id === id);
+        if(!item) return;
+
+        document.getElementById('edit-id').value = item.id;
+        document.getElementById('edit-chauffeur').value = item.chauffeur || '';
+        document.getElementById('edit-date').value = item.rawDate || '';
+        document.getElementById('edit-tonnage').value = item.tonnage || '';
+        document.getElementById('edit-note').value = item.note || '';
+
+        if (item.typeFlux === 'Jaune') {
+            document.getElementById('editTypeJaune').checked = true;
+        } else {
+            document.getElementById('editTypeNoir').checked = true;
+        }
+
+        document.getElementById('modal-edit').style.display = 'flex';
+    }
+
+    function fermerModal() {
+        document.getElementById('modal-edit').style.display = 'none';
+    }
+
+    function sauvegarderModification() {
+        const id = document.getElementById('edit-id').value;
+        const chauffeur = document.getElementById('edit-chauffeur').value.trim();
+        const dateRaw = document.getElementById('edit-date').value;
+        const tonnage = parseFloat(document.getElementById('edit-tonnage').value);
+        const note = document.getElementById('edit-note').value;
+        const typeFlux = document.querySelector('input[name="editTypeFlux"]:checked').value;
+
+        if (!chauffeur || !dateRaw || isNaN(tonnage)) {
+            alert("Veuillez remplir correctement tous les champs.");
+            return;
+        }
+
+        const dateObj = new Date(dateRaw);
+        const dateFormatee = dateObj.toLocaleDateString('fr-FR');
+
+        const donneesMisesAJour = {
+            chauffeur: chauffeur,
+            date: dateFormatee,
+            rawDate: dateRaw,
+            tonnage: tonnage,
+            note: note,
+            typeFlux: typeFlux
+        };
+
+        fetch(`${FIREBASE_URL}/tonnages/${id}.json`, {
+            method: 'PATCH',
+            body: JSON.stringify(donneesMisesAJour)
+        })
+        .then(res => {
+            if(!res.ok) throw new Error();
+            fermerModal();
+            recupererDonneesFirebase();
+        })
+        .catch(() => alert("Erreur lors de la modification."));
     }
 
     function supprimerEntree(firebaseId) {
@@ -549,7 +739,10 @@
                             <strong>${item.date} - ${item.chauffeur} : ${iconeFlux} ${item.tonnage} t</strong>
                             <div class="history-details">${item.note ? item.note : ''}</div>
                         </div>
-                        <button class="delete-btn" onclick="supprimerEntree('${item.id}')">X</button>
+                        <div class="action-btns">
+                            <button class="edit-btn" onclick="ouvrirModalEdit('${item.id}')">✏️</button>
+                            <button class="delete-btn" onclick="supprimerEntree('${item.id}')">❌</button>
+                        </div>
                     `;
                     liste.appendChild(li);
                 }

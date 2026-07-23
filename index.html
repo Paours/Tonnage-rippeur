@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Balance tes poubelles</title>
-    <link rel="manifest" href="manifest.json?v=15">
+    <link rel="manifest" href="manifest.json?v=16">
     <meta name="theme-color" content="#2e7d32">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -46,7 +46,6 @@
             margin-bottom: 15px;
         }
         
-        /* BARRE D'ONGLETS CORRIGÉE ET GARANTIE VISIBLE */
         .tabs {
             display: flex !important;
             flex-wrap: nowrap !important;
@@ -332,7 +331,7 @@
             🌍 Total Global Cumulé : <span id="total-tonnage-hist">0</span> t
             <div class="total-detail" id="detail-tonnage-hist">Noir : 0 t | Jaune : 0 t</div>
         </div>
-        <ul id="history" class="history-list"></ul>
+        <ul id="history-list" class="history-list"></ul>
     </div>
 
     <!-- ONGLET 3 : CHAUFFEURS -->
@@ -478,7 +477,7 @@
         fetch(`${FIREBASE_URL}/tonnages.json`)
         .then(res => res.json())
         .then(data => {
-            const liste = document.getElementById('history');
+            const liste = document.getElementById('history-list');
             const totalHist = document.getElementById('total-tonnage-hist');
             const detailHist = document.getElementById('detail-tonnage-hist');
             const totalSemaineSpan = document.getElementById('total-tonnage-semaine');
@@ -487,8 +486,8 @@
             const detailMois = document.getElementById('detail-tonnage-mois');
             const divChauffeurs = document.getElementById('listing-chauffeurs');
             
-            liste.innerHTML = '';
-            divChauffeurs.innerHTML = '';
+            if (liste) liste.innerHTML = '';
+            if (divChauffeurs) divChauffeurs.innerHTML = '';
             
             let totalGlobal = 0, globalNoir = 0, globalJaune = 0;
             let totalSemaine = 0, semaineNoir = 0, semaineJaune = 0;
@@ -501,11 +500,14 @@
 
             if (!data) {
                 toutesLesDonneesFirebase = [];
-                liste.innerHTML = '<li style="color:#666; font-style:italic; text-align:center; padding:10px;">Aucun tonnage enregistré.</li>';
-                divChauffeurs.innerHTML = '<p style="color:#666; font-style:italic; text-align:center;">Aucune donnée par chauffeur.</p>';
-                totalHist.textContent = "0"; detailHist.textContent = "Noir : 0 t | Jaune : 0 t";
-                totalSemaineSpan.textContent = "0"; detailSemaine.textContent = "Noir : 0 t | Jaune : 0 t";
-                totalMoisSpan.textContent = "0"; detailMois.textContent = "Noir : 0 t | Jaune : 0 t";
+                if (liste) liste.innerHTML = '<li style="color:#666; font-style:italic; text-align:center; padding:10px;">Aucun tonnage enregistré.</li>';
+                if (divChauffeurs) divChauffeurs.innerHTML = '<p style="color:#666; font-style:italic; text-align:center;">Aucune donnée par chauffeur.</p>';
+                if (totalHist) totalHist.textContent = "0"; 
+                if (detailHist) detailHist.textContent = "Noir : 0 t | Jaune : 0 t";
+                if (totalSemaineSpan) totalSemaineSpan.textContent = "0"; 
+                if (detailSemaine) detailSemaine.textContent = "Noir : 0 t | Jaune : 0 t";
+                if (totalMoisSpan) totalMoisSpan.textContent = "0"; 
+                if (detailMois) detailMois.textContent = "Noir : 0 t | Jaune : 0 t";
                 calculerTotalDuJour();
                 return;
             }
@@ -539,18 +541,20 @@
                     }
                 }
                 
-                const li = document.createElement('li');
-                li.className = 'history-item';
-                li.innerHTML = `
-                    <div>
-                        <strong>${item.date} - ${item.chauffeur} : ${iconeFlux} ${item.tonnage} t</strong>
-                        <div class="history-details">${item.note ? item.note : ''}</div>
-                    </div>
-                    <button class="delete-btn" onclick="supprimerEntree('${item.id}')">X</button>
-                `;
-                liste.appendChild(li);
+                if (liste) {
+                    const li = document.createElement('li');
+                    li.className = 'history-item';
+                    li.innerHTML = `
+                        <div>
+                            <strong>${item.date} - ${item.chauffeur} : ${iconeFlux} ${item.tonnage} t</strong>
+                            <div class="history-details">${item.note ? item.note : ''}</div>
+                        </div>
+                        <button class="delete-btn" onclick="supprimerEntree('${item.id}')">X</button>
+                    `;
+                    liste.appendChild(li);
+                }
 
-                const nomChauffeur = item.chauffeur.toUpperCase();
+                const nomChauffeur = item.chauffeur ? item.chauffeur.toUpperCase() : 'INCONNU';
                 if (!donneesParChauffeur[nomChauffeur]) {
                     donneesParChauffeur[nomChauffeur] = { total: 0, noir: 0, jaune: 0, tournees: [] };
                 }
@@ -559,50 +563,52 @@
                 donneesParChauffeur[nomChauffeur].tournees.push(item);
             });
 
-            totalHist.textContent = totalGlobal.toFixed(2);
-            detailHist.textContent = `Noir : ${globalNoir.toFixed(2)} t | Jaune : ${globalJaune.toFixed(2)} t`;
+            if (totalHist) totalHist.textContent = totalGlobal.toFixed(2);
+            if (detailHist) detailHist.textContent = `Noir : ${globalNoir.toFixed(2)} t | Jaune : ${globalJaune.toFixed(2)} t`;
             
-            totalSemaineSpan.textContent = totalSemaine.toFixed(2);
-            detailSemaine.textContent = `Noir : ${semaineNoir.toFixed(2)} t | Jaune : ${semaineJaune.toFixed(2)} t`;
+            if (totalSemaineSpan) totalSemaineSpan.textContent = totalSemaine.toFixed(2);
+            if (detailSemaine) detailSemaine.textContent = `Noir : ${semaineNoir.toFixed(2)} t | Jaune : ${semaineJaune.toFixed(2)} t`;
             
-            totalMoisSpan.textContent = totalMois.toFixed(2);
-            detailMois.textContent = `Noir : ${moisNoir.toFixed(2)} t | Jaune : ${moisJaune.toFixed(2)} t`;
+            if (totalMoisSpan) totalMoisSpan.textContent = totalMois.toFixed(2);
+            if (detailMois) detailMois.textContent = `Noir : ${moisNoir.toFixed(2)} t | Jaune : ${moisJaune.toFixed(2)} t`;
 
             calculerTotalDuJour();
 
-            Object.keys(donneesParChauffeur).sort().forEach(nom => {
-                const bloc = document.createElement('div');
-                bloc.className = 'chauffeur-bloc';
-                
-                let lignesHTML = '';
-                donneesParChauffeur[nom].tournees.forEach(t => {
-                    const icn = t.typeFlux === 'Jaune' ? '🟨' : '⬛';
-                    lignesHTML += `
-                        <div class="chauffeur-ligne">
-                            <span>📅 ${t.date} ${icn} ${t.note ? `(${t.note})` : ''}</span>
-                            <strong>${t.tonnage.toFixed(2)} t</strong>
-                        </div>
-                    `;
-                });
+            if (divChauffeurs) {
+                Object.keys(donneesParChauffeur).sort().forEach(nom => {
+                    const bloc = document.createElement('div');
+                    bloc.className = 'chauffeur-bloc';
+                    
+                    let lignesHTML = '';
+                    donneesParChauffeur[nom].tournees.forEach(t => {
+                        const icn = t.typeFlux === 'Jaune' ? '🟨' : '⬛';
+                        lignesHTML += `
+                            <div class="chauffeur-ligne">
+                                <span>📅 ${t.date} ${icn} ${t.note ? `(${t.note})` : ''}</span>
+                                <strong>${t.tonnage.toFixed(2)} t</strong>
+                            </div>
+                        `;
+                    });
 
-                bloc.innerHTML = `
-                    <div class="chauffeur-header">
-                        <span>👤 ${nom}</span>
-                        <span style="font-size:11px; font-weight:normal; text-align:right;">
-                            Total : <strong>${donneesParChauffeur[nom].total.toFixed(2)} t</strong><br>
-                            (N : ${donneesParChauffeur[nom].noir.toFixed(2)} | J : ${donneesParChauffeur[nom].jaune.toFixed(2)})
-                        </span>
-                    </div>
-                    ${lignesHTML}
-                `;
-                divChauffeurs.appendChild(bloc);
-            });
+                    bloc.innerHTML = `
+                        <div class="chauffeur-header">
+                            <span>👤 ${nom}</span>
+                            <span style="font-size:11px; font-weight:normal; text-align:right;">
+                                Total : <strong>${donneesParChauffeur[nom].total.toFixed(2)} t</strong><br>
+                                (N : ${donneesParChauffeur[nom].noir.toFixed(2)} | J : ${donneesParChauffeur[nom].jaune.toFixed(2)})
+                            </span>
+                        </div>
+                        ${lignesHTML}
+                    `;
+                    divChauffeurs.appendChild(bloc);
+                });
+            }
 
             if(document.getElementById('tab-graphiques').classList.contains('active')) {
                 genererGraphiques();
             }
         })
-        .catch(() => console.log("Erreur de récupération."));
+        .catch(err => console.log("Erreur de récupération :", err));
     }
 
     function genererGraphiques() {

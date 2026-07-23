@@ -15,41 +15,59 @@
             --background: #f5f5f5; 
             --text: #333; 
         }
+
+        html {
+            box-sizing: border-box;
+            -webkit-text-size-adjust: 100%;
+        }
+        
+        *, *:before, *:after {
+            box-sizing: inherit;
+        }
+
         body { 
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             background-color: var(--background); 
             color: var(--text); 
             margin: 0; 
             padding: 10px; 
+            min-height: 100vh;
         }
+
         .container { 
+            width: 100%;
             max-width: 500px; 
             margin: 0 auto; 
             background: white; 
             padding: 15px; 
             border-radius: 15px; 
             box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
-            box-sizing: border-box;
         }
+
         h1 { 
             text-align: center; 
             color: var(--primary); 
-            font-size: 24px; 
+            font-size: clamp(20px, 5vw, 24px); 
             margin-top: 5px; 
             margin-bottom: 15px;
         }
         
-        /* Système d'onglets */
+        /* Système d'onglets défilable proprement sur petit écran */
         .tabs {
             display: flex;
             margin-bottom: 15px;
             border-bottom: 2px solid #eee;
             overflow-x: auto;
-            white-space: nowrap;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
         }
+        .tabs::-webkit-scrollbar {
+            display: none;
+        }
+
         .tab-btn {
-            flex: 1;
-            padding: 10px 5px;
+            flex: 1 0 auto;
+            padding: 10px 8px;
             background: none;
             border: none;
             font-size: 13px;
@@ -58,7 +76,7 @@
             cursor: pointer;
             border-bottom: 3px solid transparent;
             border-radius: 0;
-            min-width: 80px;
+            text-align: center;
         }
         .tab-btn.active {
             color: var(--primary);
@@ -79,16 +97,16 @@
             margin-bottom: 5px; 
             font-weight: bold; 
         }
-        input, textarea { 
+        
+        /* Force 16px pour éviter le zoom auto intempestif sur iOS/Android */
+        input, textarea, select { 
             width: 100%; 
             padding: 10px; 
             border: 1px solid #ccc; 
             border-radius: 8px; 
-            box-sizing: border-box; 
-            font-size: 16px; 
+            font-size: 16px !important; 
         }
         
-        /* Styles pour la sélection du type de flux (poubelles) */
         .radio-group {
             display: flex;
             gap: 10px;
@@ -99,14 +117,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
-            padding: 12px;
+            gap: 6px;
+            padding: 12px 6px;
             background: #f5f5f5;
             border: 2px solid #ccc;
             border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
             font-size: 14px;
+            text-align: center;
             transition: all 0.2s;
         }
         .radio-group input[type="radio"] {
@@ -138,6 +157,7 @@
         button:active { 
             background-color: var(--secondary); 
         }
+
         .total-box { 
             background: #e8f5e9; 
             border-left: 5px solid var(--primary); 
@@ -163,6 +183,7 @@
             font-weight: normal;
             margin-top: 4px;
         }
+
         .history-list { 
             list-style: none; 
             padding: 0; 
@@ -179,23 +200,25 @@
             justify-content: space-between; 
             align-items: center; 
             border: 1px solid #eee; 
+            gap: 8px;
         }
         .history-details { 
             font-size: 13px; 
             color: #666; 
+            word-break: break-word;
         }
         .delete-btn { 
             background: #c62828; 
             color: white; 
             border: none; 
-            padding: 5px 10px; 
+            padding: 6px 12px; 
             border-radius: 4px; 
             cursor: pointer; 
             font-size: 12px; 
             width: auto;
+            flex-shrink: 0;
         }
 
-        /* Style pour l'onglet Chauffeurs */
         .chauffeur-bloc {
             background: #f0f4f1;
             border: 1px solid #d0e2d2;
@@ -219,12 +242,13 @@
             display: flex;
             justify-content: space-between;
             border-bottom: 1px dashed #e0e0e0;
+            gap: 8px;
         }
         .chauffeur-ligne:last-child {
             border-bottom: none;
         }
 
-        /* Style pour l'onglet Graphiques */
+        /* Cadre stable pour les graphiques */
         .chart-container {
             background: #fff;
             border: 1px solid #eee;
@@ -232,10 +256,12 @@
             padding: 10px;
             margin-bottom: 20px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            position: relative;
+            height: 250px;
         }
         .chart-container h3 {
             margin-top: 0;
-            font-size: 15px;
+            font-size: 14px;
             color: #555;
             text-align: center;
             border-bottom: 1px solid #eee;
@@ -637,7 +663,11 @@
                     { label: 'Poubelles Jaunes', data: dataJoursJaune, borderColor: '#fbc02d', backgroundColor: 'rgba(251,192,45,0.05)', borderWidth: 2, tension: 0.2, fill: true }
                 ]
             },
-            options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true } } 
+            }
         });
 
         // --- 2. TRAITEMENT PAR MOIS ---
@@ -676,7 +706,11 @@
                     { label: 'Jaune', data: dataMoisJaune, backgroundColor: '#fbc02d', borderRadius: 4 }
                 ]
             },
-            options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true } } 
+            }
         });
     }
 </script>
